@@ -1,6 +1,7 @@
 import { AppLoading, Asset } from 'expo';
 import React, { useState } from 'react';
 import { ThemeProvider, useThemeContext } from './providers/ThemeProvider';
+import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 
 import Icons from './utils/Icons';
 import { Image } from 'react-native';
@@ -44,7 +45,9 @@ function ProviderWrapper(): React.ReactElement {
     <ThemeProvider
       initialThemeType={ThemeType.LIGHT}
     ><StateProvider>
-        <App />
+        <ActionSheetProvider>
+          <App />
+        </ActionSheetProvider>
       </StateProvider>
     </ThemeProvider>
   );
