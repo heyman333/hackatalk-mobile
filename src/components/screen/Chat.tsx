@@ -1,5 +1,11 @@
-import { Chat, DefaultNavigationProps } from '../../types';
+import * as ImagePicker from 'expo-image-picker';
+import * as Permissions from 'expo-permissions';
 import { Image, Platform, TouchableOpacity, View } from 'react-native';
+import {
+  NavigationParams,
+  NavigationScreenProp,
+  NavigationState,
+} from 'react-navigation';
 import React, { useState } from 'react';
 import styled, {
   DefaultTheme,
@@ -8,6 +14,7 @@ import styled, {
 } from 'styled-components/native';
 
 import Button from '../shared/Button';
+import { Chat } from '../../types';
 import ChatListItem from '../shared/ChatListItem';
 import Constants from 'expo-constants';
 import EmptyListItem from '../shared/EmptyListItem';
@@ -25,7 +32,7 @@ const StyledContainer = styled.SafeAreaView`
 `;
 
 interface Props extends ThemeProps<DefaultTheme> {
-  navigation: DefaultNavigationProps;
+  navigation: NavigationScreenProp<NavigationState, NavigationParams>;
 }
 
 interface State {
@@ -37,6 +44,7 @@ interface State {
 
 function Screen(props: Props): React.ReactElement {
   const { theme } = props;
+  console.log(props);
 
   const [isSending, setIsSending] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
@@ -95,6 +103,35 @@ function Screen(props: Props): React.ReactElement {
     setIsSending(true);
   };
 
+  const getPermissions = async (
+    type: string,
+  ): Promise<Permissions.PermissionStatus> => {
+    if (type === 'photo') {
+      const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+      return status;
+    }
+    const { status } = await Permissions.askAsync(Permissions.CAMERA);
+    return status;
+  };
+
+  const onSelectImage = async (type: string): Promise<void> => { 
+    const photoOptions = {
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      exif: true,
+    };
+    const permissionStatus = await getPermissions(type);
+    if (permissionStatus === Permissions.PermissionStatus.GRANTED) {
+      if (type === 'photo') {
+        const result = await ImagePicker.launchImageLibraryAsync(photoOptions);
+        console.log('result', result);
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync(photoOptions);
+      console.log('result', result);
+    }
+  };
+
   return (
     <StyledContainer>
       <GiftedChat
@@ -139,6 +176,7 @@ function Screen(props: Props): React.ReactElement {
             }}
           >
             <TouchableOpacity
+              onPress={(): Promise<void> => onSelectImage('camera')}
               style={{
                 marginLeft: 16,
                 marginTop: 2,
@@ -155,6 +193,7 @@ function Screen(props: Props): React.ReactElement {
               />
             </TouchableOpacity>
             <TouchableOpacity
+              onPress={(): Promise<void> => onSelectImage('photo')}
               style={{
                 marginLeft: 16,
                 marginTop: 4,
